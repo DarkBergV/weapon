@@ -65,6 +65,15 @@ class Main():
                     self.player.jumps -=1
                     pygame.time.set_timer(COYOTE_JUMP_EVENT,0)
 
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.player.attack(self.display_screen, self.scroll)
+                        self.player.is_attacking = True
+                if event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.player.attack(self.display_screen, self.scroll)
+                        self.player.is_attacking = False
+
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_d:
                         self.movement[0] = True

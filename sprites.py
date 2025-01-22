@@ -15,6 +15,7 @@ class Body(pygame.sprite.Sprite):
         self.type = type
         self.collisions = {'up':False, 'down': False, 'left': False, 'right':False}
         self.was_on_floor = False
+        self.is_on_ceiling = False
         self.is_jumping = False
         
 
@@ -60,6 +61,7 @@ class Body(pygame.sprite.Sprite):
                 if framemove[1] < 0: #check if is on the ceiling
                     self.collisions['top'] = True
                     body_rect.top = rect.bottom
+                    
 
                 if framemove[1] > 0: #checks if is on the ground
                     self.collisions['down'] = True
@@ -105,6 +107,10 @@ class Player(Body):
         self.jumps = self.jump_value
         self.jump_force = 0
         self.coyote = False
+        self.display =pygame.surface.Surface(self.size)
+        self.display.fill((255,0,0))
+        self.is_attacking = False
+        
        
        
 
@@ -115,8 +121,21 @@ class Player(Body):
         print(self.jump_force)
         player_rect = self.rect()
         if movement[0] == 0:
-            self.type = "player"
+           
             self.set_action('iddle')
+
+        if movement[0] == 0 and self.is_attacking:
+            self.set_action('attack')
+
+        if self.collisions['up'] == True:
+            pass
+        if movement[0] != 0:
+            self.set_action('run')
+
+        if movement[0] != 0 and self.is_attacking:
+            self.set_action('attack')
+
+      
 
   
 
@@ -147,3 +166,15 @@ class Player(Body):
 
     def flip_image(self):
         self.flip = not self.flip
+
+    def attack(self, surf, offset = [0,0]):
+        self.is_attacking = True
+        rect = self.rect()
+        if not self.flip:
+
+            surf.blit(self.display, 
+                    (rect[0] + 32 - offset[0], rect[1] - offset[1]))
+        
+        if self.flip:
+            surf.blit(self.display, 
+                    (rect[0] - 22 - offset[0], rect[1] - offset[1]))
