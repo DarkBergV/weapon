@@ -28,7 +28,7 @@ class Main():
         self.running = True
         self.clock = pygame.time.Clock()
        
-        self.tilemap = Tilemap(self, 32)
+        self.tilemap = Tilemap(self, 64)
         self.scene = []
         self.assets = {'ground/ground': load_images('ground'),
                        'player/attack':Animation(load_images('player/attack')),
@@ -36,17 +36,17 @@ class Main():
                        'player/run':Animation(load_images('player/run'))}
         self.load_level()
 
-        self.player = Player(self, [0,0], [32,32], (255,0,0), 'player')
+        self.player = Player(self, [0,0], [46,46], (255,0,0), 'player')
     def load_level(self):
         self.tilemap.load('map.json')
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
-            self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],32,32))
+            self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],64,64))
 
 
     def run(self):
         while self.running:
             
-            self.display_screen.fill((255,255,255))
+            self.display_screen.fill((255,0,255))
             self.tilemap.render(self.display_screen, self.scroll)
             self.scroll[0] += (self.player.rect().centerx - self.display_screen.get_width() / 2 - self.scroll[0]) / 30
             self.scroll[1] += (self.player.rect().centery - self.display_screen.get_height() / 2 - self.scroll[1]) / 30
