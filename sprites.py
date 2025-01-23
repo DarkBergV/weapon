@@ -10,7 +10,7 @@ class Body(pygame.sprite.Sprite):
         self.pos = pos
         self.size = size 
         self.color = color
-        self.velocity = [0,0]
+        
         
         self.velocity = [0,0]
         self.type = type
@@ -38,6 +38,7 @@ class Body(pygame.sprite.Sprite):
         self.apply_gravity()
 
         framemove = (self.velocity[0] + movement[0], self.velocity[1] + movement[1])
+        print(self.velocity)
         self.pos[0]+= framemove[0] * 1.5
         body_rect = self.rect()
         for rect in tilemap.physics_rect_around(self.pos):
@@ -127,26 +128,32 @@ class Player(Body):
         player_rect = self.rect()
       
 
-        if movement[0] == 0 and not self.is_attacking:
+        if self.collisions['down'] and  movement[0] == 0 and not self.is_attacking:
            
             self.set_action('iddle')
         
-        if movement[0] == 0 and self.is_attacking:
+        if self.collisions['down'] and  movement[0] == 0 and self.is_attacking:
             self.set_action('attack')
            
             
             
           
 
-        if movement[0] != 0 and not self.is_attacking:
+        if self.collisions['down'] and  movement[0] != 0 and not self.is_attacking:
             self.set_action('run')
 
-        if movement[0] != 0 and self.is_attacking:
+        if self.collisions['down'] and movement[0] != 0 and self.is_attacking:
             self.set_action('attack')
-            
 
+        if not self.collisions['down'] and self.is_jumping and self.is_attacking:
+            self.set_action('fall_attack')
 
-
+        if not self.collisions['down'] and self.is_jumping and self.collisions['up']:
+            self.set_action('ceiling')
+        print(self.velocity[1])
+        
+        
+        
  
       
 
@@ -185,22 +192,23 @@ class Player(Body):
         self.flip = not self.flip
 
     def attack(self, surf, offset = [0,0]):
-
-    
+      
         self.is_attacking = True
+        if self.is_attacking:
 
-        rect = self.rect()
-        if not self.flip:
+            rect = self.rect()
+            if not self.flip:
 
-            surf.blit(self.display, 
-                    (rect[0] + 32 - offset[0], rect[1] - offset[1]))
-        
-        if self.flip:
-            surf.blit(self.display, 
-                    (rect[0] - 22 - offset[0], rect[1] - offset[1]))
-        
-        
+                surf.blit(self.display, 
+                        (rect[0] + 32 - offset[0], rect[1] - offset[1]))
             
+            if self.flip:
+                surf.blit(self.display, 
+                        (rect[0] - 22 - offset[0], rect[1] - offset[1]))
+        
+        
+    def hitbox(self):
+        pass
       
         
         

@@ -32,9 +32,11 @@ class Main():
         self.tilemap = Tilemap(self, 64)
         self.scene = []
         self.assets = {'ground/ground': load_images('ground'),
+                       'player/ceiling': Animation(load_images('player/ceiling')),
                        'player/attack':Animation(load_images('player/attack')),
                        'player/iddle':Animation(load_images('player/iddle')),
-                       'player/run':Animation(load_images('player/run'))}
+                       'player/run':Animation(load_images('player/run')),
+                       'player/fall_attack':Animation(load_images('player/fall_attack'))}
         self.load_level()
 
         self.player = Player(self, [0,0], [46,46], (255,0,0), 'player')
@@ -61,7 +63,7 @@ class Main():
                     sys.exit()
 
                 if event.type == COYOTE_JUMP_EVENT:
-                    print('aaaaaaaaaaaaaaaaaaaaa')
+                   
                     self.player.was_on_floor = False
                     self.player.jumps -=1
                     pygame.time.set_timer(COYOTE_JUMP_EVENT,0)
@@ -75,13 +77,10 @@ class Main():
                     if event.button == 1:
                         self.player.attack(self.display_screen, self.scroll)
                         
-                        print(event)
+                       
                         
                        
-                if event.type == pygame.MOUSEBUTTONUP:
-                    if event.button == 1:
-                        
-                        self.player.is_attacking = False
+              
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_d:
