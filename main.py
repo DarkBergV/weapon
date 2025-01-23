@@ -13,6 +13,7 @@ RENDER_SCALE = 2.0
 
 
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
+ATTACK_EVENT = pygame.USEREVENT + 2
 
 
 
@@ -48,8 +49,8 @@ class Main():
             
             self.display_screen.fill((255,0,255))
             self.tilemap.render(self.display_screen, self.scroll)
-            self.scroll[0] += (self.player.rect().centerx - self.display_screen.get_width() / 2 - self.scroll[0]) / 30
-            self.scroll[1] += (self.player.rect().centery - self.display_screen.get_height() / 2 - self.scroll[1]) / 30
+            self.scroll[0] += (self.player.rect().centerx - self.display_screen.get_width() / 2 - self.scroll[0]) 
+            self.scroll[1] += (self.player.rect().centery - self.display_screen.get_height() / 2 - self.scroll[1]) 
 
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
@@ -65,20 +66,30 @@ class Main():
                     self.player.jumps -=1
                     pygame.time.set_timer(COYOTE_JUMP_EVENT,0)
 
+                if event.type == ATTACK_EVENT:
+                    self.player.is_attacking = False
+
+                
+
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         self.player.attack(self.display_screen, self.scroll)
-                        self.player.is_attacking = True
+                        
+                        print(event)
+                        
+                       
                 if event.type == pygame.MOUSEBUTTONUP:
                     if event.button == 1:
-                        self.player.attack(self.display_screen, self.scroll)
+                        
                         self.player.is_attacking = False
 
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_d:
                         self.movement[0] = True
+                        self.movement[1] = False
                         self.player.velocity[0] = min(5, self.player.velocity[0] + 1)
                     if event.key == pygame.K_a:
+                        self.movement[0] = False
                         self.movement[1] = True
                         self.player.velocity[0] = min(5, self.player.velocity[0] + 1) * -1
                     if event.key == pygame.K_w:

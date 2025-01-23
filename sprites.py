@@ -1,6 +1,7 @@
 import pygame
 
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
+ATTACK_EVENT = pygame.USEREVENT + 2
 
 
 class Body(pygame.sprite.Sprite):
@@ -17,6 +18,7 @@ class Body(pygame.sprite.Sprite):
         self.was_on_floor = False
         self.is_on_ceiling = False
         self.is_jumping = False
+        self.is_attacking = False
         
 
         #animation 
@@ -29,13 +31,14 @@ class Body(pygame.sprite.Sprite):
         if action != self.action:
             self.action = action
             self.animation = self.game.assets[self.type + '/' + self.action].copy()
+        
 
     def update(self,tilemap, movement, offset=[0,0]):
         self.collisions = {'up':False, 'down': False, 'left': False, 'right':False}
         self.apply_gravity()
 
         framemove = (self.velocity[0] + movement[0], self.velocity[1] + movement[1])
-        self.pos[0]+= framemove[0]
+        self.pos[0]+= framemove[0] * 1.5
         body_rect = self.rect()
         for rect in tilemap.physics_rect_around(self.pos):
             if body_rect.colliderect(rect):
@@ -50,7 +53,7 @@ class Body(pygame.sprite.Sprite):
                 
                 self.pos[0] = body_rect.x
 
-        print(framemove[0])
+     
         self.pos[1]+= framemove[1]
         body_rect = self.rect()
         
@@ -110,6 +113,7 @@ class Player(Body):
         self.display =pygame.surface.Surface(self.size)
         self.display.fill((255,0,0))
         self.is_attacking = False
+        self.state = 'iddle'
         
        
        
@@ -117,34 +121,47 @@ class Player(Body):
 
 
     def update(self, tilemap, movement):
+        
         self.can_coyote()
-        print(self.jump_force)
+        
         player_rect = self.rect()
-        if movement[0] == 0:
+      
+
+        if movement[0] == 0 and not self.is_attacking:
            
             self.set_action('iddle')
-
+        
         if movement[0] == 0 and self.is_attacking:
             self.set_action('attack')
+           
+            
+            
+          
 
-        if self.collisions['up'] == True:
-            pass
-        if movement[0] != 0:
+        if movement[0] != 0 and not self.is_attacking:
             self.set_action('run')
 
         if movement[0] != 0 and self.is_attacking:
             self.set_action('attack')
+            
 
+
+
+ 
       
 
   
 
 
         self.animation.update()
-        print(self.animation.img().get_height())
+        if self.animation.done:
+            self.is_attacking = False
+       
         return super().update(tilemap, movement = movement)
 
     
+    def player_states(self):
+        pass
     def jump(self):
         if self.jumps > 0 :
             
@@ -168,7 +185,10 @@ class Player(Body):
         self.flip = not self.flip
 
     def attack(self, surf, offset = [0,0]):
+
+    
         self.is_attacking = True
+
         rect = self.rect()
         if not self.flip:
 
@@ -178,3 +198,10 @@ class Player(Body):
         if self.flip:
             surf.blit(self.display, 
                     (rect[0] - 22 - offset[0], rect[1] - offset[1]))
+        
+        
+            
+      
+        
+        
+    
