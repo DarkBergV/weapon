@@ -219,7 +219,7 @@ class Player(Body):
         if not self.flip:
             return pygame.rect.Rect(self.pos[0]+ 32, self.pos[1], 50, 50)
         if self.flip:
-            return pygame.rect.Rect(self.pos[0] - 22, self.pos[1], 50, 50)
+            return pygame.rect.Rect(self.pos[0] - 23, self.pos[1], 50, 50)
     
     
         
@@ -230,10 +230,10 @@ class Player(Body):
         
 
         for enemy in enemies:
-            if hitbox.colliderect(enemy.rect()) and not self.flip:
-                print('chuva')
-            if hitbox.colliderect(enemy.rect()) and self.flip:
-                print('heli')
+            if hitbox.colliderect(enemy.rect()) and not self.flip and self.is_attacking:
+                enemy.lose_hp()
+            if hitbox.colliderect(enemy.rect()) and self.flip and self.is_attacking:
+                enemy.lose_hp()
 
 class Enemy(Body):
     def __init__(self, game, pos, size, color, type):
@@ -241,10 +241,12 @@ class Enemy(Body):
         super().__init__(game, pos, size, color, type)
         self.display = pygame.Surface(self.size)
         self.display.fill(color)
-        
+        self.hp = 3
+
 
 
     def update(self, tilemap, movement, offset=[0, 0]):
+        print(self.hp)
         return super().update(tilemap, movement, offset)
         
     def render(self, surf, offset=(0, 0)):
@@ -252,3 +254,7 @@ class Enemy(Body):
         surf.blit(self.display, (
             rect[0] - offset[0], rect[1] - offset[1]
         ))
+
+    def lose_hp(self):
+        self.hp -= 1
+   
