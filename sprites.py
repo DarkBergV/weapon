@@ -25,7 +25,7 @@ class Body(pygame.sprite.Sprite):
         self.action = ''
         self.anim_offset = (-3, -3)
         self.flip = False
-        self.set_action('iddle')
+        
 
     def set_action(self,action):
         if action != self.action:
@@ -38,7 +38,7 @@ class Body(pygame.sprite.Sprite):
         self.apply_gravity()
 
         framemove = (self.velocity[0] + movement[0], self.velocity[1] + movement[1])
-        print(self.velocity)
+     
         self.pos[0]+= framemove[0] * 1.5
         body_rect = self.rect()
         for rect in tilemap.physics_rect_around(self.pos):
@@ -70,8 +70,9 @@ class Body(pygame.sprite.Sprite):
                 if framemove[1] > 0: #checks if is on the ground
                     self.collisions['down'] = True
                     body_rect.bottom = rect.top
-                    self.jumps = self.jump_value
-                    self.was_on_floor = True
+                    if self.type == 'player':
+                        self.jumps = self.jump_value
+                        self.was_on_floor = True
                     
                 
                 self.pos[1] = body_rect.y
@@ -107,14 +108,14 @@ class Player(Body):
     def __init__(self, game, pos, size, color, type):
 
         super().__init__(game, pos, size, color, type)
-        self.jump_value = 100
+        self.jump_value = 1
         self.jumps = self.jump_value
         self.jump_force = 0
         self.coyote = False
-        self.display =pygame.surface.Surface(self.size)
+        self.display =pygame.surface.Surface((50,50))
         self.display.fill((255,0,0))
         self.is_attacking = False
-        self.state = 'iddle'
+        self.set_action('iddle')
         
        
        
@@ -150,20 +151,12 @@ class Player(Body):
 
         if not self.collisions['down'] and self.is_jumping and self.collisions['up']:
             self.set_action('ceiling')
-        print(self.velocity[1])
         
-        
-        
- 
-      
-
-  
-
-
         self.animation.update()
-        if self.animation.done:
+        if self.animation.done:#when the animation ends is_attacking becomes false
             self.is_attacking = False
-       
+
+        self.enemy_detection()#check to see how it handles multiple boxes
         return super().update(tilemap, movement = movement)
 
     
@@ -182,8 +175,8 @@ class Player(Body):
 
     def can_coyote(self):
         if not self.collisions['down'] and self.was_on_floor and self.velocity[1] >= 0:
-            #pygame.time.set_timer(COYOTE_JUMP_EVENT, 500)
-            pass
+            pygame.time.set_timer(COYOTE_JUMP_EVENT, 500)
+            
 
         if not self.collisions['down']:
             self.was_on_floor = False
@@ -191,25 +184,71 @@ class Player(Body):
     def flip_image(self):
         self.flip = not self.flip
 
-    def attack(self, surf, offset = [0,0]):
-      
+    def attack(self, surf, offset = [0,0]): #attack function thats called when the left,mouse button is pressed
+                                            #is attacking becomes true
+
         self.is_attacking = True
-        if self.is_attacking:
+        
 
-            rect = self.rect()
-            if not self.flip:
+        rect = self.hitbox()
+        
+        if not self.flip:
 
-                surf.blit(self.display, 
-                        (rect[0] + 32 - offset[0], rect[1] - offset[1]))
-            
-            if self.flip:
-                surf.blit(self.display, 
-                        (rect[0] - 22 - offset[0], rect[1] - offset[1]))
+            surf.blit(self.display, 
+                    (rect[0] + 40  - offset[0], rect[1] - offset[1]))
         
-        
-    def hitbox(self):
-        pass
-      
-        
-        
+        if self.flip:
+            surf.blit(self.display, 
+                    (rect[0] - 40 - offset[0], rect[1] - offset[1]))
     
+    def render(self, surf, offset=(0, 0)):
+        rect = self.hitbox()
+        
+        if not self.flip:
+
+            surf.blit(self.display, 
+                    (rect[0]  - offset[0], rect[1] - offset[1]))
+        
+        if self.flip:
+            surf.blit(self.display, 
+                    (rect[0] - offset[0], rect[1] - offset[1]))
+    
+        return super().render(surf, offset)
+
+    def hitbox(self):
+        if not self.flip:
+            return pygame.rect.Rect(self.pos[0]+ 32, self.pos[1], 50, 50)
+        if self.flip:
+            return pygame.rect.Rect(self.pos[0] - 22, self.pos[1], 50, 50)
+    
+    
+        
+        
+    def enemy_detection(self):
+        enemies = [enemy for enemy in self.game.enemies]
+        hitbox = self.hitbox()
+        
+
+        for enemy in enemies:
+            if hitbox.colliderect(enemy.rect()) and not self.flip:
+                print('chuva')
+            if hitbox.colliderect(enemy.rect()) and self.flip:
+                print('heli')
+
+class Enemy(Body):
+    def __init__(self, game, pos, size, color, type):
+            
+        super().__init__(game, pos, size, color, type)
+        self.display = pygame.Surface(self.size)
+        self.display.fill(color)
+        
+
+
+    def update(self, tilemap, movement, offset=[0, 0]):
+        return super().update(tilemap, movement, offset)
+        
+    def render(self, surf, offset=(0, 0)):
+        rect = self.rect()
+        surf.blit(self.display, (
+            rect[0] - offset[0], rect[1] - offset[1]
+        ))

@@ -1,6 +1,6 @@
 import pygame
 import sys
-from sprites import Body, Player
+from sprites import Body, Player, Enemy
 from tilemap import Tilemap
 from utils import load_image, load_images, Animation
 
@@ -37,11 +37,15 @@ class Main():
                        'player/iddle':Animation(load_images('player/iddle')),
                        'player/run':Animation(load_images('player/run')),
                        'player/fall_attack':Animation(load_images('player/fall_attack'))}
+        
+        self.enemy = Enemy(self,[50,50], [46,46], [15,20,70], "enemy")
+        self.enemies = []
         self.load_level()
 
         self.player = Player(self, [0,0], [46,46], (255,0,0), 'player')
     def load_level(self):
         self.tilemap.load('map.json')
+        self.enemies.append(self.enemy)
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
             self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],64,64))
 
@@ -49,10 +53,11 @@ class Main():
     def run(self):
         while self.running:
             
-            self.display_screen.fill((255,0,255))
+            self.display_screen.fill((100,25,50))
             self.tilemap.render(self.display_screen, self.scroll)
             self.scroll[0] += (self.player.rect().centerx - self.display_screen.get_width() / 2 - self.scroll[0]) 
-            self.scroll[1] += (self.player.rect().centery - self.display_screen.get_height() / 2 - self.scroll[1]) 
+            self.scroll[1] += (self.player.rect().centery - self.display_screen.get_height() / 2 - self.scroll[1])
+
 
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
 
@@ -111,6 +116,8 @@ class Main():
 
             self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
             self.player.render(self.display_screen, render_scroll)
+            self.enemy.update(self.tilemap, [0,0], [0,0])
+            self.enemy.render(self.display_screen, render_scroll)
 
 
             self.screen.blit(pygame.transform.scale(self.display_screen, self.screen.get_size()), (0,0))

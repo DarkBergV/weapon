@@ -15,7 +15,7 @@ def load_images(path):
 
 
 class Animation:
-    def __init__(self, images, img_duration=12, loop=True):
+    def __init__(self, images, img_duration=25, loop=True):
         self.images = images
         self.img_duration = img_duration
         self.loop = loop
