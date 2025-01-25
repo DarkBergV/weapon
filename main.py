@@ -80,8 +80,10 @@ class Main():
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
+                        self.player.dealing_damage = True
+                       
                         self.player.attack(self.display_screen, self.scroll)
-                        
+                       
                        
                         
                        
@@ -116,8 +118,11 @@ class Main():
 
             self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
             self.player.render(self.display_screen, render_scroll)
-            self.enemy.update(self.tilemap, [0,0], [0,0])
-            self.enemy.render(self.display_screen, render_scroll)
+            for enemy in self.enemies.copy():
+                kill = enemy.update(self.tilemap, [0,0], [0,0])
+                enemy.render(self.display_screen, render_scroll)
+                if kill:
+                    self.enemies.remove(enemy)
 
 
             self.screen.blit(pygame.transform.scale(self.display_screen, self.screen.get_size()), (0,0))

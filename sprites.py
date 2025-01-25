@@ -116,6 +116,7 @@ class Player(Body):
         self.display.fill((255,0,0))
         self.is_attacking = False
         self.set_action('iddle')
+        self.dealing_damage = False
         
        
        
@@ -151,12 +152,12 @@ class Player(Body):
 
         if not self.collisions['down'] and self.is_jumping and self.collisions['up']:
             self.set_action('ceiling')
-        
+        self.enemy_detection()#check to see how it handles multiple boxes
         self.animation.update()
         if self.animation.done:#when the animation ends is_attacking becomes false
             self.is_attacking = False
 
-        self.enemy_detection()#check to see how it handles multiple boxes
+        
         return super().update(tilemap, movement = movement)
 
     
@@ -227,14 +228,16 @@ class Player(Body):
     def enemy_detection(self):
         enemies = [enemy for enemy in self.game.enemies]
         hitbox = self.hitbox()
+        if self.dealing_damage:
+            print(self.dealing_damage)
+      
         
 
         for enemy in enemies:
-            if hitbox.colliderect(enemy.rect()) and not self.flip and self.is_attacking:
+            if hitbox.colliderect(enemy.rect())  and self.is_attacking and self.dealing_damage:
                 enemy.lose_hp()
-            if hitbox.colliderect(enemy.rect()) and self.flip and self.is_attacking:
-                enemy.lose_hp()
-
+                enemy.losing_hp = True
+                self.dealing_damage = False
 class Enemy(Body):
     def __init__(self, game, pos, size, color, type):
             
@@ -242,6 +245,7 @@ class Enemy(Body):
         self.display = pygame.Surface(self.size)
         self.display.fill(color)
         self.hp = 3
+        self.losing_hp = False
 
 
 
@@ -256,5 +260,8 @@ class Enemy(Body):
         ))
 
     def lose_hp(self):
-        self.hp -= 1
+        self.hp -=1
+        if self.hp <= 0:
+            print('asasas')
+            return True
    
