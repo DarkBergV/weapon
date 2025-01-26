@@ -228,16 +228,14 @@ class Player(Body):
     def enemy_detection(self):
         enemies = [enemy for enemy in self.game.enemies]
         hitbox = self.hitbox()
-        if self.dealing_damage:
-            print(self.dealing_damage)
-      
-        
 
         for enemy in enemies:
             if hitbox.colliderect(enemy.rect())  and self.is_attacking and self.dealing_damage:
                 enemy.lose_hp()
                 enemy.losing_hp = True
                 self.dealing_damage = False
+
+
 class Enemy(Body):
     def __init__(self, game, pos, size, color, type):
             
@@ -246,11 +244,13 @@ class Enemy(Body):
         self.display.fill(color)
         self.hp = 3
         self.losing_hp = False
+        self.killed = False
 
 
 
     def update(self, tilemap, movement, offset=[0, 0]):
-        print(self.hp)
+       
+    
         return super().update(tilemap, movement, offset)
         
     def render(self, surf, offset=(0, 0)):
@@ -261,7 +261,10 @@ class Enemy(Body):
 
     def lose_hp(self):
         self.hp -=1
+        print(self.hp)
         if self.hp <= 0:
-            print('asasas')
-            return True
+            
+            self.killed = True
+        
+    
    

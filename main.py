@@ -39,6 +39,7 @@ class Main():
                        'player/fall_attack':Animation(load_images('player/fall_attack'))}
         
         self.enemy = Enemy(self,[50,50], [46,46], [15,20,70], "enemy")
+        self.enemy2 = Enemy(self,[100,100], [46,46], [15,70,25], "enemy")
         self.enemies = []
         self.load_level()
 
@@ -46,6 +47,7 @@ class Main():
     def load_level(self):
         self.tilemap.load('map.json')
         self.enemies.append(self.enemy)
+        self.enemies.append(self.enemy2)
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
             self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],64,64))
 
@@ -115,13 +117,14 @@ class Main():
                     if event.key == pygame.K_s:
                         self.movement[2] = False
 
-
+            print(len(self.enemies))
             self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
             self.player.render(self.display_screen, render_scroll)
             for enemy in self.enemies.copy():
                 kill = enemy.update(self.tilemap, [0,0], [0,0])
                 enemy.render(self.display_screen, render_scroll)
-                if kill:
+                
+                if enemy.killed:
                     self.enemies.remove(enemy)
 
 
