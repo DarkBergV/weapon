@@ -1,4 +1,5 @@
 import pygame
+import math
 
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
 ATTACK_EVENT = pygame.USEREVENT + 2
@@ -160,9 +161,7 @@ class Player(Body):
         
         return super().update(tilemap, movement = movement)
 
-    
-    def player_states(self):
-        pass
+ 
     def jump(self):
         if self.jumps > 0 :
             
@@ -249,22 +248,46 @@ class Enemy(Body):
 
 
     def update(self, tilemap, movement, offset=[0, 0]):
-       
+        player_detection = self.player_detection_area().copy()
+        player = self.game.player.rect()
+
+        if player_detection.colliderect(player):
+            dx, dy = player.x - self.rect().x, player.y - self.rect().y
+            dist = math.hypot(dx,dy)
+          
+            dx,dy = dx/dist, dy/dist
+
+            self.pos[0] += dx *3
+           
+
+
+            
     
         return super().update(tilemap, movement, offset)
         
     def render(self, surf, offset=(0, 0)):
+        p = self.player_detection_area()
+        test = pygame.surface.Surface((200,200))
+        test.fill((255,255,0))
+
+        surf.blit(test, (
+            p[0] - offset[0], p[1] - offset[1]
+        ))
         rect = self.rect()
         surf.blit(self.display, (
             rect[0] - offset[0], rect[1] - offset[1]
         ))
 
+       
     def lose_hp(self):
         self.hp -=1
-        print(self.hp)
+        
         if self.hp <= 0:
             
             self.killed = True
+
+    def player_detection_area(self):
+        return pygame.rect.Rect(self.pos[0] - 75, self.pos[1] - 75, 200, 200)
         
     
-   
+    
