@@ -255,28 +255,29 @@ class Enemy(Body):
         player_detection = self.player_detection_area().copy()
         player = self.game.player.rect()
         tilerect = [rect for rect in tilemap.physics_rect_around(self.pos)]
+        
         check_ground = self.ground_check()
         check_ground_left = self.ground_check_left()
-        self.flip = True
-        for rect in tilemap.physics_rect_around(check_ground):
+       
+        
            
-            if not check_ground.collidelistall(tilerect):
-                #self.flip = not self.flip
-                pass
-            else:
-                pass
+        if not check_ground.collidelistall(tilerect) or  not check_ground_left.collidelistall(tilerect):
+            self.flip = not self.flip
+            
+        else:
+            pass
 
-            if not check_ground_left.collidelistall(tilerect):
-                print("no ground")
+        if  not check_ground_left.collidelistall(tilerect):
+            print("no ground")
 
-            else:
-                print('ground')
+        else:
+            print('ground')
 
 
         if player_detection.colliderect(player):
             pass
         if self.walking:
-            movement = (movement[0] - 0.1 if self.flip else 0.1, movement[1])
+            movement = (movement[0] - 1 if self.flip else 1, movement[1])
           
            
    
@@ -328,7 +329,7 @@ class Enemy(Body):
         return pygame.rect.Rect(self.rect().centerx  + 15, self.rect().centery + 15 , 10, 10)
     
     def ground_check_left(self):
-        return pygame.rect.Rect(self.rect().centerx  -20 , self.rect().centery + 15, 10, 10)
+        return pygame.rect.Rect(self.rect().centerx  - 25 , self.rect().centery + 15, 10, 10)
 
        
     def lose_hp(self):
