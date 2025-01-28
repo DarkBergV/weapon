@@ -23,8 +23,7 @@ class Editor:
 
         self.assets = {'ground/ground': load_images('ground')}
 
-        self.tilemap = Tilemap(self, 16)
-
+        self.tilemap = Tilemap(self, 32)
         try:
             self.tilemap.load('map.json')
         except FileNotFoundError:

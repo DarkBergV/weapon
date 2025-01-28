@@ -1,5 +1,6 @@
 import pygame
 import math
+import random
 
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
 ATTACK_EVENT = pygame.USEREVENT + 2
@@ -158,7 +159,7 @@ class Player(Body):
         if self.animation.done:#when the animation ends is_attacking becomes false
             self.is_attacking = False
 
-        
+      
         return super().update(tilemap, movement = movement)
 
  
@@ -239,30 +240,61 @@ class Enemy(Body):
     def __init__(self, game, pos, size, color, type):
             
         super().__init__(game, pos, size, color, type)
-        self.display = pygame.Surface(self.size)
+        self.display = pygame.Surface([32,32])
         self.display.fill(color)
+        self.walking = 0
         self.hp = 3
         self.losing_hp = False
         self.killed = False
+        self.state = 'falling'
+        self.move = 1
 
 
 
     def update(self, tilemap, movement, offset=[0, 0]):
         player_detection = self.player_detection_area().copy()
         player = self.game.player.rect()
+        tilerect = [rect for rect in tilemap.physics_rect_around(self.pos)]
+        check_ground = self.ground_check()
+        check_ground_left = self.ground_check_left()
+        self.flip = True
+        for rect in tilemap.physics_rect_around(check_ground):
+           
+            if not check_ground.collidelistall(tilerect):
+                #self.flip = not self.flip
+                pass
+            else:
+                pass
+
+            if not check_ground_left.collidelistall(tilerect):
+                print("no ground")
+
+            else:
+                print('ground')
+
 
         if player_detection.colliderect(player):
+            pass
+        if self.walking:
+            movement = (movement[0] - 0.1 if self.flip else 0.1, movement[1])
+          
+           
+   
+
+        elif random.random() < 0.01:
+            self.walking = random.randint(30, 120)
+        
+        
+
+        """if self.state == 'following':
             dx, dy = player.x - self.rect().x, player.y - self.rect().y
             dist = math.hypot(dx,dy)
           
             dx,dy = dx/dist, dy/dist
 
-            self.pos[0] += dx *3
-           
+            self.pos[0] += dx * 1.5"""
 
-
-            
-    
+        
         return super().update(tilemap, movement, offset)
         
     def render(self, surf, offset=(0, 0)):
@@ -270,13 +302,33 @@ class Enemy(Body):
         test = pygame.surface.Surface((200,200))
         test.fill((255,255,0))
 
-        surf.blit(test, (
-            p[0] - offset[0], p[1] - offset[1]
-        ))
+        """surf.blit(test, (0
+        ))"""
         rect = self.rect()
         surf.blit(self.display, (
             rect[0] - offset[0], rect[1] - offset[1]
         ))
+        check = pygame.surface.Surface((10,10))
+        check.fill((0,0,0))
+        
+        another = self.ground_check()
+        surf.blit(check, (
+            another[0] - offset[0], another[1] - offset[1]
+        ))
+        other = self.ground_check_left()
+        surf.blit(check, (
+            other[0] - offset[0], other[1] - offset[1]
+        ))
+
+
+
+
+    def ground_check(self):
+      
+        return pygame.rect.Rect(self.rect().centerx  + 15, self.rect().centery + 15 , 10, 10)
+    
+    def ground_check_left(self):
+        return pygame.rect.Rect(self.rect().centerx  -20 , self.rect().centery + 15, 10, 10)
 
        
     def lose_hp(self):

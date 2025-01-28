@@ -29,7 +29,7 @@ class Main():
         self.running = True
         self.clock = pygame.time.Clock()
        
-        self.tilemap = Tilemap(self, 64)
+        self.tilemap = Tilemap(self, 32)
         self.scene = []
         self.assets = {'ground/ground': load_images('ground'),
                        'player/ceiling': Animation(load_images('player/ceiling')),
@@ -38,18 +38,20 @@ class Main():
                        'player/run':Animation(load_images('player/run')),
                        'player/fall_attack':Animation(load_images('player/fall_attack'))}
         
-        self.enemy = Enemy(self,[50,50], [45,45], [15,20,70], "enemy")
+        self.enemy = Enemy(self,[32,32], [26,26], [15,20,70], "enemy")
         self.enemy2 = Enemy(self,[100,100], [46,46], [15,70,25], "enemy")
+        
+       
         self.enemies = []
         self.load_level()
 
-        self.player = Player(self, [0,0], [46,46], (255,0,0), 'player')
+        self.player = Player(self, [0,0], [26,26], (255,0,0), 'player')
     def load_level(self):
         self.tilemap.load('map.json')
         self.enemies.append(self.enemy)
        
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
-            self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],64,64))
+            self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],32.0,32.0))
 
 
     def run(self):
@@ -118,14 +120,16 @@ class Main():
                         self.movement[2] = False
 
            
-            self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
-            self.player.render(self.display_screen, render_scroll)
+            
             for enemy in self.enemies.copy():
                 kill = enemy.update(self.tilemap, [0,0], [0,0])
                 enemy.render(self.display_screen, render_scroll)
                 
                 if enemy.killed:
                     self.enemies.remove(enemy)
+
+            self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
+            self.player.render(self.display_screen, render_scroll)
 
 
             self.screen.blit(pygame.transform.scale(self.display_screen, self.screen.get_size()), (0,0))
