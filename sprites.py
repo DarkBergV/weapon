@@ -4,6 +4,7 @@ import random
 
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
 ATTACK_EVENT = pygame.USEREVENT + 2
+INVINCIBILITY_EVENT = pygame.USEREVENT + 3
 
 
 class Body(pygame.sprite.Sprite):
@@ -30,6 +31,7 @@ class Body(pygame.sprite.Sprite):
         
 
     def set_action(self,action):
+        
         if action != self.action:
             self.action = action
             self.animation = self.game.assets[self.type + '/' + self.action].copy()
@@ -38,8 +40,8 @@ class Body(pygame.sprite.Sprite):
     def update(self,tilemap, movement, offset=[0,0]):
         self.collisions = {'up':False, 'down': False, 'left': False, 'right':False}
         self.apply_gravity()
-
-        framemove = (self.velocity[0] + movement[0], self.velocity[1] + movement[1])
+     
+        framemove = ( movement[0] +  self.velocity[0] , self.velocity[1] + movement[1])
      
         self.pos[0]+= framemove[0] * 1.5
         body_rect = self.rect()
@@ -65,7 +67,7 @@ class Body(pygame.sprite.Sprite):
         for rect in tilemap.physics_rect_around(self.pos):
             if body_rect.colliderect(rect):
                 if framemove[1] < 0: #check if is on the ceiling
-                    self.collisions['top'] = True
+                    self.collisions['up'] = True
                     body_rect.top = rect.bottom
                     
 
@@ -119,6 +121,9 @@ class Player(Body):
         self.is_attacking = False
         self.set_action('iddle')
         self.dealing_damage = False
+
+        self.invincibility = False
+        self.hp = 5
         
        
        
@@ -159,8 +164,13 @@ class Player(Body):
         if self.animation.done:#when the animation ends is_attacking becomes false
             self.is_attacking = False
 
+        
+            
       
+        
+        self.knockback(movement)  
         return super().update(tilemap, movement = movement)
+    
 
  
     def jump(self):
@@ -203,26 +213,36 @@ class Player(Body):
                     (rect[0] - 40 - offset[0], rect[1] - offset[1]))
     
     def render(self, surf, offset=(0, 0)):
-        rect = self.hitbox()
         
-        if not self.flip:
-
-            surf.blit(self.display, 
-                    (rect[0]  - offset[0], rect[1] - offset[1]))
-        
-        if self.flip:
-            surf.blit(self.display, 
-                    (rect[0] - offset[0], rect[1] - offset[1]))
     
         return super().render(surf, offset)
+    
+    
 
     def hitbox(self):
         if not self.flip:
             return pygame.rect.Rect(self.pos[0]+ 32, self.pos[1], 50, 50)
         if self.flip:
             return pygame.rect.Rect(self.pos[0] - 23, self.pos[1], 50, 50)
-    
-    
+        
+    def knock_left(self):
+        if self.invincibility == False:
+            self.hp -= 1
+            self.pos[0] -= 5 
+            self.pos[1] -= 25
+          
+            self.invincibility = True
+            pygame.time.set_timer(INVINCIBILITY_EVENT, 3000)
+
+    def knock_right(self):
+        if self.invincibility == False:
+            self.hp -= 1
+            self.pos[0] += 5 
+            self.pos[1] -= 25
+          
+            self.invincibility = True
+            pygame.time.set_timer(INVINCIBILITY_EVENT, 3000)
+        
         
         
     def enemy_detection(self):
@@ -234,6 +254,32 @@ class Player(Body):
                 enemy.lose_hp()
                 enemy.losing_hp = True
                 self.dealing_damage = False
+
+    def knockback(self, movement):
+        if self.invincibility == False:
+            body_rect = self.rect()
+            framemove = (self.velocity[0] + movement[0], self.velocity[1] + movement[1])
+            enemies = self.game.enemies
+            for enemy in enemies:
+                if body_rect.colliderect(enemy.rect()):
+                    if framemove[0] < 0:
+                        self.collisions['left'] = True
+                        body_rect.left = enemy.rect().right 
+
+                    if framemove[0] > 0:
+                        self.collisions['right'] = True
+                        body_rect.right = enemy.rect().left
+                    
+                    self.pos[0] = body_rect.x
+                    
+                    if framemove[1] > 0:
+                        body_rect.bottom = enemy.rect().top
+                    
+                    self.pos[1]= body_rect.y
+                    self.hp -= 1
+
+                    self.invincibility = True
+            pygame.time.set_timer(INVINCIBILITY_EVENT, 3000)
 
 
 class Enemy(Body):
@@ -248,10 +294,12 @@ class Enemy(Body):
         self.killed = False
         self.state = 'falling'
         self.move = 1
+        self.set_action('walk')
 
 
 
     def update(self, tilemap, movement, offset=[0, 0]):
+        
         player_detection = self.player_detection_area().copy()
         player = self.game.player.rect()
         tilerect = [rect for rect in tilemap.physics_rect_around(self.pos)]
@@ -264,26 +312,34 @@ class Enemy(Body):
         if not check_ground.collidelistall(tilerect) or  not check_ground_left.collidelistall(tilerect):
             self.flip = not self.flip
             
-        else:
-            pass
-
-        if  not check_ground_left.collidelistall(tilerect):
-            print("no ground")
-
-        else:
-            print('ground')
-
+        
 
         if player_detection.colliderect(player):
             pass
         if self.walking:
-            movement = (movement[0] - 1 if self.flip else 1, movement[1])
+            if self.collisions['right'] or self.collisions['left']:
+                self.flip = not self.flip
+            else:
+                movement = (movement[0] - 1 if self.flip else 1, movement[1])
           
            
    
 
         elif random.random() < 0.01:
             self.walking = random.randint(30, 120)
+        
+       
+        if movement[0] != 0:
+            self.set_action('walk')
+            print('walk')
+        
+        else:
+            
+            self.set_action('iddle')
+            print('iddl')
+
+        self.animation.update()
+
         
         
 
@@ -294,7 +350,8 @@ class Enemy(Body):
             dx,dy = dx/dist, dy/dist
 
             self.pos[0] += dx * 1.5"""
-
+        
+        self.player_knockback(movement)
         
         return super().update(tilemap, movement, offset)
         
@@ -321,7 +378,11 @@ class Enemy(Body):
             other[0] - offset[0], other[1] - offset[1]
         ))
 
+        return super().render(surf, offset)
+    
 
+
+    
 
 
     def ground_check(self):
@@ -329,7 +390,7 @@ class Enemy(Body):
         return pygame.rect.Rect(self.rect().centerx  + 15, self.rect().centery + 15 , 10, 10)
     
     def ground_check_left(self):
-        return pygame.rect.Rect(self.rect().centerx  - 25 , self.rect().centery + 15, 10, 10)
+        return pygame.rect.Rect(self.rect().centerx  - 20 , self.rect().centery + 15, 10, 10)
 
        
     def lose_hp(self):
@@ -342,5 +403,25 @@ class Enemy(Body):
     def player_detection_area(self):
         return pygame.rect.Rect(self.pos[0] - 75, self.pos[1] - 75, 200, 200)
         
-    
-    
+    def player_knockback(self, movement):
+        rect = self.rect()
+        player_collision = {"up":False, "down":False, "Left": False, "right":True}
+        framemove = (self.velocity[0] + movement[0], self.velocity[1] + movement[1])
+        
+
+        
+
+        player = self.game.player
+        player_rect = player.rect()
+            
+        if rect.colliderect(player_rect):
+            if framemove[0] < 0:
+                player_collision['left'] = True
+                player.knock_left()
+
+            if framemove[0] > 0:
+                player_collision['right'] = True
+                
+                player.knock_right() 
+
+        

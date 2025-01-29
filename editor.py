@@ -21,7 +21,8 @@ class Editor:
         
         self.clock = pygame.time.Clock()
 
-        self.assets = {'ground/ground': load_images('ground')}
+        self.assets = {'ground/ground': load_images('tiles/ground'),
+                       'spawners': load_images('tiles/spawner')}
 
         self.tilemap = Tilemap(self, 32)
         try:

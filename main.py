@@ -14,6 +14,7 @@ RENDER_SCALE = 2.0
 
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
 ATTACK_EVENT = pygame.USEREVENT + 2
+INVINCIBILITY_EVENT = pygame.USEREVENT + 3
 
 
 
@@ -31,28 +32,40 @@ class Main():
        
         self.tilemap = Tilemap(self, 32)
         self.scene = []
-        self.assets = {'ground/ground': load_images('ground'),
+        self.assets = {'ground/ground': load_images('tiles/ground'),
                        'player/ceiling': Animation(load_images('player/ceiling')),
                        'player/attack':Animation(load_images('player/attack')),
                        'player/iddle':Animation(load_images('player/iddle')),
                        'player/run':Animation(load_images('player/run')),
-                       'player/fall_attack':Animation(load_images('player/fall_attack'))}
+                       'player/fall_attack':Animation(load_images('player/fall_attack')),
+                       'enemy/iddle': Animation(load_images('enemy/iddle')),
+                       'enemy/walk': Animation(load_images('enemy/walk')),
+                       'spawners': load_images('tiles/spawner')}
         
-        self.enemy = Enemy(self,[32,32], [26,26], [15,20,70], "enemy")
-        self.enemy2 = Enemy(self,[100,100], [46,46], [15,70,25], "enemy")
         
-       
+        
+        self.player = Player(self, [200,100], [26,26], (255,0,0), 'player')
         self.enemies = []
         self.load_level()
 
-        self.player = Player(self, [0,0], [26,26], (255,0,0), 'player')
+        
     def load_level(self):
         self.tilemap.load('map.json')
-        self.enemies.append(self.enemy)
        
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
             self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],32.0,32.0))
+     
 
+        for spawner in self.tilemap.extract([('spawners',0),('spawners',1), ('spawners',2)]):
+            
+         
+            if spawner['variant'] == 0:
+                enemy = Enemy(self,spawner['pos'], [26,26], [15,20,70], "enemy")
+                self.enemies.append(enemy)
+
+            if spawner['variant'] == 2:
+                self.player.pos = spawner["pos"]
+        
 
     def run(self):
         while self.running:
@@ -79,6 +92,10 @@ class Main():
 
                 if event.type == ATTACK_EVENT:
                     self.player.is_attacking = False
+                
+                if event.type == INVINCIBILITY_EVENT:
+                    self.player.invincibility = False
+                    pygame.time.set_timer(INVINCIBILITY_EVENT,0)
 
                 
 

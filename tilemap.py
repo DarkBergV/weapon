@@ -40,7 +40,7 @@ class Tilemap:
         for loc in loc_to_del:
             del self.tilemap[loc]
                     
-
+       
         matches = sorted(matches, key=lambda d: d["variant"])
         return matches
 
