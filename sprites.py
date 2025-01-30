@@ -294,7 +294,7 @@ class Enemy(Body):
         self.killed = False
         self.state = 'falling'
         self.move = 1
-        self.set_action('walk')
+        self.set_action('iddle')
 
 
 
@@ -321,22 +321,36 @@ class Enemy(Body):
                 self.flip = not self.flip
             else:
                 movement = (movement[0] - 1 if self.flip else 1, movement[1])
-          
+
+            self.walking = max(0, self.walking - 1)
+            if not self.walking:
+                dis = (self.game.player.pos[0] - self.pos[0], self.game.player.pos[1] - self.pos[1])
+                if (abs(dis[1]) < 16):
+                    if self.flip and dis[0] < 0:
+                        self.game.bullets.append([[self.rect().centerx + 34, self.rect().centery - 8], -1.5, 0 ])
+                        print('shoot')
+
+                    if not self.flip and dis[0] > 0:
+                        self.game.bullets.append([[self.rect().centerx - 1, self.rect().centery - 8], 1.5, 0 ])
+     
+
            
    
 
         elif random.random() < 0.01:
             self.walking = random.randint(30, 120)
+
+        
         
        
         if movement[0] != 0:
-            self.set_action('walk')
-            print('walk')
+            self.set_action('run')
+           
         
         else:
             
             self.set_action('iddle')
-            print('iddl')
+        
 
         self.animation.update()
 
@@ -424,4 +438,20 @@ class Enemy(Body):
                 
                 player.knock_right() 
 
+class GunEnemy(Enemy):
+    def __init__(self, game, pos, size, color, type):
+        super().__init__(game, pos, size, color, type)
+
+    
+    def update(self, tilemap, movement, offset=[0, 0]):
         
+        return super().update(tilemap, movement, offset)
+    
+    def render(self, surf, offset=(0, 0)):
+        if self.flip:
+            surf.blit(pygame.transform.flip(self.game.assets['gun'], True, False), (self.rect().centerx + 37 - self.game.assets['gun'].get_width() - offset[0], self.rect().centery - 8 - offset[1]))
+         
+        else:
+            surf.blit(self.game.assets['gun'], (self.rect().centerx - 4 - offset[0], self.rect().centery - 8 - offset[1]))
+
+        return super().render(surf, offset)

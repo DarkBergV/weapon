@@ -1,6 +1,6 @@
 import pygame
 import sys
-from sprites import Body, Player, Enemy
+from sprites import Body, Player, Enemy, GunEnemy
 from tilemap import Tilemap
 from utils import load_image, load_images, Animation
 
@@ -29,6 +29,7 @@ class Main():
         self.scroll = [0,0]
         self.running = True
         self.clock = pygame.time.Clock()
+        self.bullets = []
        
         self.tilemap = Tilemap(self, 32)
         self.scene = []
@@ -39,8 +40,12 @@ class Main():
                        'player/run':Animation(load_images('player/run')),
                        'player/fall_attack':Animation(load_images('player/fall_attack')),
                        'enemy/iddle': Animation(load_images('enemy/iddle')),
-                       'enemy/walk': Animation(load_images('enemy/walk')),
-                       'spawners': load_images('tiles/spawner')}
+                       'enemy/run': Animation(load_images('enemy/run')),
+                       'gun_enemy/iddle': Animation(load_images('gun_enemy/iddle')),
+                       'gun_enemy/run': Animation(load_images('gun_enemy/run')),
+                       'spawners': load_images('tiles/spawner'),
+                       'gun':load_image("gun.png"),
+                       'bullet':load_image("bullet.png")}
         
         
         
@@ -62,6 +67,10 @@ class Main():
             if spawner['variant'] == 0:
                 enemy = Enemy(self,spawner['pos'], [26,26], [15,20,70], "enemy")
                 self.enemies.append(enemy)
+
+            if spawner['variant'] == 1:
+                gun_enemy = GunEnemy(self, spawner['pos'], [26,26], [70,15,20], 'gun_enemy')
+                self.enemies.append(gun_enemy)
 
             if spawner['variant'] == 2:
                 self.player.pos = spawner["pos"]
@@ -147,6 +156,16 @@ class Main():
 
             self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
             self.player.render(self.display_screen, render_scroll)
+            
+            for bullet in self.bullets.copy():
+                bullet[0][0] += bullet[1]
+                bullet[2] += 1
+                img = self.assets['bullet']
+                self.display_screen.blit(img, (bullet[0][0] - img.get_width() / 2 - render_scroll[0], bullet[0][1] - img.get_height() / 2 - render_scroll[1]))
+                if self.tilemap.solid_check(bullet[0]):
+                    self.bullets.remove(bullet)
+                elif bullet[2] > 360:
+                    self.bullets.remove(bullet)
 
 
             self.screen.blit(pygame.transform.scale(self.display_screen, self.screen.get_size()), (0,0))
