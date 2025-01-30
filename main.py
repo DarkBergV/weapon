@@ -15,6 +15,7 @@ RENDER_SCALE = 2.0
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
 ATTACK_EVENT = pygame.USEREVENT + 2
 INVINCIBILITY_EVENT = pygame.USEREVENT + 3
+FALL_CEILING_EVENT = pygame.USEREVENT + 4
 
 
 
@@ -29,12 +30,13 @@ class Main():
         self.scroll = [0,0]
         self.running = True
         self.clock = pygame.time.Clock()
-        self.bullets = []
+        
+        
         self.player_died = 0
         
        
         self.tilemap = Tilemap(self, 32)
-        self.scene = []
+       
         self.assets = {'ground/ground': load_images('tiles/ground'),
                        'player/ceiling': Animation(load_images('player/ceiling')),
                        'player/attack':Animation(load_images('player/attack')),
@@ -51,7 +53,7 @@ class Main():
         
         
         
-        self.player = Player(self, [200,100], [26,26], (255,0,0), 'player')
+        
         
         self.load_level()
 
@@ -77,7 +79,8 @@ class Main():
                 self.enemies.append(gun_enemy)
 
             if spawner['variant'] == 2:
-                self.player.pos = spawner["pos"]
+                self.player = Player(self, spawner["pos"], [26,26], (255,0,0), 'player')
+                
         self.player.hp = 5
 
         self.dead = 0
@@ -108,7 +111,10 @@ class Main():
                    
                     self.player.was_on_floor = False
                     self.player.jumps -=1
+                    self.player.air_time = 0
+                    
                     pygame.time.set_timer(COYOTE_JUMP_EVENT,0)
+                    
 
                 if event.type == ATTACK_EVENT:
                     self.player.is_attacking = False
@@ -117,6 +123,12 @@ class Main():
                     self.player.invincibility = False
                     pygame.time.set_timer(INVINCIBILITY_EVENT,0)
 
+                if event.type == FALL_CEILING_EVENT:
+                    self.player.gravity = True
+                    self.player.can_ceiling = False
+                    self.player.set_action('iddle')
+                    pygame.event.clear(FALL_CEILING_EVENT)
+                    pygame.time.set_timer(FALL_CEILING_EVENT,0)
                 
 
                 if event.type == pygame.MOUSEBUTTONDOWN:
@@ -188,7 +200,7 @@ class Main():
                 
                 self.player_died += 1 
                 self.dead += 1 
-            print(self.dead)
+            
 
 
 

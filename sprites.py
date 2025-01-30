@@ -5,6 +5,7 @@ import random
 COYOTE_JUMP_EVENT = pygame.USEREVENT + 1
 ATTACK_EVENT = pygame.USEREVENT + 2
 INVINCIBILITY_EVENT = pygame.USEREVENT + 3
+FALL_CEILING_EVENT = pygame.USEREVENT + 4
 
 
 class Body(pygame.sprite.Sprite):
@@ -22,12 +23,14 @@ class Body(pygame.sprite.Sprite):
         self.is_on_ceiling = False
         self.is_jumping = False
         self.is_attacking = False
+        self.falling = False
         
 
         #animation 
         self.action = ''
         self.anim_offset = (-3, -3)
         self.flip = False
+        self.gravity = True
         
 
     def set_action(self,action):
@@ -39,47 +42,48 @@ class Body(pygame.sprite.Sprite):
 
     def update(self,tilemap, movement, offset=[0,0]):
         self.collisions = {'up':False, 'down': False, 'left': False, 'right':False}
-        self.apply_gravity()
+        if self.gravity:
+            self.apply_gravity()
      
-        framemove = ( movement[0] +  self.velocity[0] , self.velocity[1] + movement[1])
-     
-        self.pos[0]+= framemove[0] * 1.5
-        body_rect = self.rect()
-        for rect in tilemap.physics_rect_around(self.pos):
-            if body_rect.colliderect(rect):
-                if framemove[0] < 0:
-                    self.collisions['left'] = True
-                    body_rect.left = rect.right 
-
-                if framemove[0] > 0:
-                    self.collisions['right'] = True
-                    body_rect.right = rect.left 
-                    
-                
-                self.pos[0] = body_rect.x
-
-     
-        self.pos[1]+= framemove[1]
-        body_rect = self.rect()
+            framemove = ( movement[0] +  self.velocity[0] , self.velocity[1] + movement[1])
         
+            self.pos[0]+= framemove[0] * 1.5
+            body_rect = self.rect()
+            for rect in tilemap.physics_rect_around(self.pos):
+                if body_rect.colliderect(rect):
+                    if framemove[0] < 0:
+                        self.collisions['left'] = True
+                        body_rect.left = rect.right 
 
-
-        for rect in tilemap.physics_rect_around(self.pos):
-            if body_rect.colliderect(rect):
-                if framemove[1] < 0: #check if is on the ceiling
-                    self.collisions['up'] = True
-                    body_rect.top = rect.bottom
+                    if framemove[0] > 0:
+                        self.collisions['right'] = True
+                        body_rect.right = rect.left 
+                        
                     
+                    self.pos[0] = body_rect.x
 
-                if framemove[1] > 0: #checks if is on the ground
-                    self.collisions['down'] = True
-                    body_rect.bottom = rect.top
-                    if self.type == 'player':
-                        self.jumps = self.jump_value
-                        self.was_on_floor = True
+     
+            self.pos[1]+= framemove[1]
+            body_rect = self.rect()
+            
+
+
+            for rect in tilemap.physics_rect_around(self.pos):
+                if body_rect.colliderect(rect):
+                    if framemove[1] < 0: #check if is on the ceiling
+                        self.collisions['up'] = True
+                        body_rect.top = rect.bottom
+                        
+
+                    if framemove[1] > 0: #checks if is on the ground
+                        self.collisions['down'] = True
+                        body_rect.bottom = rect.top
+                        if self.type == 'player':
+                            self.jumps = self.jump_value
+                            self.was_on_floor = True
+                        
                     
-                
-                self.pos[1] = body_rect.y
+                    self.pos[1] = body_rect.y
 
         if movement[0] > 0:
             self.flip = False
@@ -103,6 +107,10 @@ class Body(pygame.sprite.Sprite):
         self.velocity[1] = min(2, self.velocity[1] + 0.1)
         if self.collisions['down'] or self.collisions['up']:
             self.velocity[1] = 0
+
+        if self.falling:
+            self.velocity[1]= min(5, self.velocity[1] + 0.9)
+
             
 
 
@@ -124,16 +132,36 @@ class Player(Body):
 
         self.invincibility = False
         self.hp = 1
-        
+        self.air_time = 0
+        self.count = 0
+        self.can_ceiling = False
        
-       
+    """def apply_gravity(self):
+        self.velocity[1] = min(2, self.velocity[1] + 0.1)
+        if self.collisions['down'] or self.collisions['up']:
+            self.velocity[1] = 0"""
 
 
 
     def update(self, tilemap, movement):
         
         self.can_coyote()
+        self.air_time += 1
         
+        if self.collisions['down']:
+            self.air_time = 0
+            self.falling = False
+        if self.air_time >= 60:
+             self.falling = True
+        if self.air_time >= 280:
+            self.game.dead += 1
+
+        
+                
+           
+                
+            
+      
         player_rect = self.rect()
       
 
@@ -157,8 +185,9 @@ class Player(Body):
         if not self.collisions['down'] and self.is_jumping and self.is_attacking:
             self.set_action('fall_attack')
 
-        if not self.collisions['down'] and self.is_jumping and self.collisions['up']:
-            self.set_action('ceiling')
+        
+            
+            
         self.enemy_detection()#check to see how it handles multiple boxes
         self.animation.update()
         if self.animation.done:#when the animation ends is_attacking becomes false
@@ -178,15 +207,28 @@ class Player(Body):
             
             self.velocity[1] -= max(7, self.velocity[1] + 0.2)
             self.jumps -=1
+            self.air_time = 0
             self.is_jumping = True
+        
+        if self.can_ceiling:
+
+            if not self.collisions['down'] and self.is_jumping and self.collisions['up']:
+                if self.air_time < 100:
+                    print('something')
+                    self.gravity = False
+                    
+                    self.set_action('ceiling')
+                    pygame.time.set_timer(FALL_CEILING_EVENT, 2000)
 
    
     def release_jump(self):
-        pass
+        self.can_ceiling = True
 
     def can_coyote(self):
         if not self.collisions['down'] and self.was_on_floor and self.velocity[1] >= 0:
+            
             pygame.time.set_timer(COYOTE_JUMP_EVENT, 500)
+            
             
 
         if not self.collisions['down']:
@@ -239,7 +281,7 @@ class Player(Body):
             self.hp -= 1
             self.pos[0] += 5 
             self.pos[1] -= 25
-          
+
             self.invincibility = True
             pygame.time.set_timer(INVINCIBILITY_EVENT, 3000)
         
@@ -329,7 +371,7 @@ class Enemy(Body):
                     if (abs(dis[1]) < 16):
                         if self.flip and dis[0] < 0:
                             self.game.bullets.append([[self.rect().centerx + 20, self.rect().centery - 2], -1.5, 0 ])
-                            print('shoot')
+                            
 
                         if not self.flip and dis[0] > 0:
                             self.game.bullets.append([[self.rect().centerx +  5, self.rect().centery - 2], 1.5, 0 ])
