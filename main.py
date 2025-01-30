@@ -30,6 +30,8 @@ class Main():
         self.running = True
         self.clock = pygame.time.Clock()
         self.bullets = []
+        self.player_died = 0
+        
        
         self.tilemap = Tilemap(self, 32)
         self.scene = []
@@ -50,13 +52,15 @@ class Main():
         
         
         self.player = Player(self, [200,100], [26,26], (255,0,0), 'player')
-        self.enemies = []
+        
         self.load_level()
 
         
     def load_level(self):
         self.tilemap.load('map.json')
-       
+        self.enemies = []
+        self.scene = []
+        self.bullets = []
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
             self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],32.0,32.0))
      
@@ -74,12 +78,19 @@ class Main():
 
             if spawner['variant'] == 2:
                 self.player.pos = spawner["pos"]
+        self.player.hp = 5
+
+        self.dead = 0
         
 
     def run(self):
         while self.running:
             
             self.display_screen.fill((100,25,50))
+            if self.dead:
+                self.dead +=1
+                if self.dead > 40:
+                    self.load_level()
             self.tilemap.render(self.display_screen, self.scroll)
             self.scroll[0] += (self.player.rect().centerx - self.display_screen.get_width() / 2 - self.scroll[0]) 
             self.scroll[1] += (self.player.rect().centery - self.display_screen.get_height() / 2 - self.scroll[1])
@@ -154,18 +165,31 @@ class Main():
                 if enemy.killed:
                     self.enemies.remove(enemy)
 
-            self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
-            self.player.render(self.display_screen, render_scroll)
+            if not self.dead:
+                self.player.update(self.tilemap,[self.movement[0] - self.movement[1], self.movement[2] - self.movement[3]])
+                self.player.render(self.display_screen, render_scroll)
             
             for bullet in self.bullets.copy():
                 bullet[0][0] += bullet[1]
                 bullet[2] += 1
                 img = self.assets['bullet']
                 self.display_screen.blit(img, (bullet[0][0] - img.get_width() / 2 - render_scroll[0], bullet[0][1] - img.get_height() / 2 - render_scroll[1]))
-                if self.tilemap.solid_check(bullet[0]):
+                
+                for tilerect in self.tilemap.physics_rect_around(bullet[0]):
+                    if tilerect.collidepoint(bullet[0]):
+                        self.bullets.remove(bullet)
+                if bullet[2] > 360:
                     self.bullets.remove(bullet)
-                elif bullet[2] > 360:
+                elif self.player.rect().collidepoint(bullet[0]):
+                    self.player.hp -= 1
+                    self.player.invincibility = True
                     self.bullets.remove(bullet)
+            if self.player.hp <= 0 :
+                
+                self.player_died += 1 
+                self.dead += 1 
+            print(self.dead)
+
 
 
             self.screen.blit(pygame.transform.scale(self.display_screen, self.screen.get_size()), (0,0))

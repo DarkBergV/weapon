@@ -123,7 +123,7 @@ class Player(Body):
         self.dealing_damage = False
 
         self.invincibility = False
-        self.hp = 5
+        self.hp = 1
         
        
        
@@ -324,15 +324,16 @@ class Enemy(Body):
 
             self.walking = max(0, self.walking - 1)
             if not self.walking:
-                dis = (self.game.player.pos[0] - self.pos[0], self.game.player.pos[1] - self.pos[1])
-                if (abs(dis[1]) < 16):
-                    if self.flip and dis[0] < 0:
-                        self.game.bullets.append([[self.rect().centerx + 34, self.rect().centery - 8], -1.5, 0 ])
-                        print('shoot')
+                if self.type == 'gun_enemy':
+                    dis = (self.game.player.pos[0] - self.pos[0], self.game.player.pos[1] - self.pos[1])
+                    if (abs(dis[1]) < 16):
+                        if self.flip and dis[0] < 0:
+                            self.game.bullets.append([[self.rect().centerx + 20, self.rect().centery - 2], -1.5, 0 ])
+                            print('shoot')
 
-                    if not self.flip and dis[0] > 0:
-                        self.game.bullets.append([[self.rect().centerx - 1, self.rect().centery - 8], 1.5, 0 ])
-     
+                        if not self.flip and dis[0] > 0:
+                            self.game.bullets.append([[self.rect().centerx +  5, self.rect().centery - 2], 1.5, 0 ])
+        
 
            
    
@@ -448,10 +449,10 @@ class GunEnemy(Enemy):
         return super().update(tilemap, movement, offset)
     
     def render(self, surf, offset=(0, 0)):
-        if self.flip:
+        """if self.flip:
             surf.blit(pygame.transform.flip(self.game.assets['gun'], True, False), (self.rect().centerx + 37 - self.game.assets['gun'].get_width() - offset[0], self.rect().centery - 8 - offset[1]))
          
         else:
-            surf.blit(self.game.assets['gun'], (self.rect().centerx - 4 - offset[0], self.rect().centery - 8 - offset[1]))
+            surf.blit(self.game.assets['gun'], (self.rect().centerx - 4 - offset[0], self.rect().centery - 8 - offset[1]))"""
 
         return super().render(surf, offset)
