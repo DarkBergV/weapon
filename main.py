@@ -35,6 +35,12 @@ class Main():
         
         
         self.player_died = 0
+
+        #show hp on screen
+        self.font = pygame.font.Font(None, 25)
+        self.color_font = (255,255,255)
+        self.hp_display = pygame.surface.Surface((90,50))
+        self.font = pygame.font.Font(None, size = 40)
         
        
         self.tilemap = Tilemap(self, 32)
@@ -48,13 +54,17 @@ class Main():
                        'player/iddle':Animation(load_images('player/iddle')),
                        'player/run':Animation(load_images('player/run')),
                        'player/fall_attack':Animation(load_images('player/fall_attack')),
+                       'player/jump':Animation(load_images('player/jump')),
+                       'player/double_jump':Animation(load_images('player/double_jump')),
                        'enemy/iddle': Animation(load_images('enemy/iddle')),
                        'enemy/run': Animation(load_images('enemy/run')),
                        'gun_enemy/iddle': Animation(load_images('gun_enemy/iddle')),
                        'gun_enemy/run': Animation(load_images('gun_enemy/run')),
+                       'shield':load_image('shield.png'),
                        'spawners': load_images('tiles/spawner'),
                        'gun':load_image("gun.png"),
-                       'bullet':load_image("bullet.png")}
+                       'bullet':load_image("bullet.png"),
+                       'hp':load_image("hp_background.png")}
         
         
         
@@ -113,7 +123,7 @@ class Main():
             if spawner['variant'] == 2:
                 self.player = Player(self, spawner["pos"], [26,26], (255,0,0), 'player')
                 
-        self.player.hp = 5
+        
 
         self.dead = 0
         
@@ -132,6 +142,8 @@ class Main():
 
 
             render_scroll = (int(self.scroll[0]), int(self.scroll[1]))
+            #create hp text
+            hp = self.font.render('HP:' + f'{self.player.hp}', True, self.color_font)
 
             for event in pygame.event.get():
                 
@@ -252,6 +264,9 @@ class Main():
 
 
             self.screen.blit(pygame.transform.scale(self.display_screen, self.screen.get_size()), (0,0))
+            self.hp_display.blit(self.assets['hp'],(0,0))
+            self.hp_display.blit(hp, (15,10))
+            self.screen.blit(self.hp_display, (0,0))
             pygame.display.update()
             self.clock.tick(60)
 g = Main()

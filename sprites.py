@@ -132,7 +132,11 @@ class Player(Body):
         self.dealing_damage = False
 
         self.invincibility = False
-        self.hp = 1
+        if not self.game.shield:
+            self.hp = 5
+        else:
+            self.hp = 8
+        
         self.air_time = 0
         self.count = 0
         self.can_ceiling = False
@@ -153,7 +157,7 @@ class Player(Body):
             self.air_time = 0
             self.falling = False
         
-        if self.air_time >= 280:
+        if self.air_time >= 600 and not self.collisions['up'] and not self.collisions['down'] and not self.collisions['left'] and not self.collisions['right']:
             self.game.dead += 1
 
         
@@ -204,7 +208,7 @@ class Player(Body):
  
     def jump(self):
         if self.jumps > 0 :
-            
+            self.set_action('jump')
             self.velocity[1] -= max(7, self.velocity[1] + 0.2)
             self.jumps -=1
             self.air_time = 0
@@ -221,9 +225,11 @@ class Player(Body):
                     pygame.time.set_timer(FALL_CEILING_EVENT, 2000)
             
             if not self.collisions['down'] and self.is_jumping and not self.collisions['up'] and self.game.gun:
-                self.velocity[1] = -3
+                self.velocity[1] = -5
                 self.game.player_bullets.append([[self.rect().centerx + 20, self.rect().centery - 2], 1.5, 0 ])
                 self.is_jumping = False
+               
+                self.set_action('double_jump')
                     
                     
                     
@@ -263,8 +269,12 @@ class Player(Body):
                     (rect[0] - 40 - offset[0], rect[1] - offset[1]))
     
     def render(self, surf, offset=(0, 0)):
-        
-    
+        if self.game.shield:
+            if self.flip:
+                surf.blit(pygame.transform.flip(self.game.assets['shield'], True, False), (self.rect().centerx + 35  - self.game.assets['shield'].get_width() - offset[0], self.rect().centery - 12 - offset[1]))
+            
+            else:
+                surf.blit(self.game.assets['shield'], (self.rect().centerx - 4 - offset[0], self.rect().centery - 12 - offset[1]))
         return super().render(surf, offset)
     
     
@@ -428,27 +438,9 @@ class Enemy(Body):
         return super().update(tilemap, movement, offset)
         
     def render(self, surf, offset=(0, 0)):
-        p = self.player_detection_area()
-        test = pygame.surface.Surface((200,200))
-        test.fill((255,255,0))
-
-        """surf.blit(test, (0
-        ))"""
-        rect = self.rect()
-        surf.blit(self.display, (
-            rect[0] - offset[0], rect[1] - offset[1]
-        ))
-        check = pygame.surface.Surface((10,10))
-        check.fill((0,0,0))
         
-        another = self.ground_check()
-        surf.blit(check, (
-            another[0] - offset[0], another[1] - offset[1]
-        ))
-        other = self.ground_check_left()
-        surf.blit(check, (
-            other[0] - offset[0], other[1] - offset[1]
-        ))
+     
+        
 
         return super().render(surf, offset)
     
@@ -511,10 +503,6 @@ class GunEnemy(Enemy):
         return super().update(tilemap, movement, offset)
     
     def render(self, surf, offset=(0, 0)):
-        """if self.flip:
-            surf.blit(pygame.transform.flip(self.game.assets['gun'], True, False), (self.rect().centerx + 37 - self.game.assets['gun'].get_width() - offset[0], self.rect().centery - 8 - offset[1]))
-         
-        else:
-            surf.blit(self.game.assets['gun'], (self.rect().centerx - 4 - offset[0], self.rect().centery - 8 - offset[1]))"""
+        
 
         return super().render(surf, offset)
