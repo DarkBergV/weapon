@@ -94,6 +94,7 @@ class Main():
         self.enemies = []
         self.scene = []
         self.bullets = []
+        self.player_bullets = []
         for ground in self.tilemap.extract([('ground/ground', 0)], keep = True):
             self.scene.append(pygame.Rect(ground['pos'][0], ground['pos'][1],32.0,32.0))
      
@@ -229,6 +230,19 @@ class Main():
                     self.player.hp -= 1
                     self.player.invincibility = True
                     self.bullets.remove(bullet)
+
+            for bullet in self.player_bullets.copy():
+                bullet[0][1] += bullet[1]
+                bullet[2] += 1
+                img = self.assets['bullet']
+                self.display_screen.blit(img, (bullet[0][0] - img.get_width() / 2 - render_scroll[0], bullet[0][1] - img.get_height() / 2 - render_scroll[1]))
+                
+                for tilerect in self.tilemap.physics_rect_around(bullet[0]):
+                    if tilerect.collidepoint(bullet[0]):
+                        self.player_bullets.remove(bullet)
+                if bullet[2] > 360:
+                    self.player_bullets.remove(bullet)
+                
             if self.player.hp <= 0 :
                 
                 self.player_died += 1 

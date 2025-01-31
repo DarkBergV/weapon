@@ -120,6 +120,7 @@ class Player(Body):
     def __init__(self, game, pos, size, color, type):
 
         super().__init__(game, pos, size, color, type)
+       
         self.jump_value = 1
         self.jumps = self.jump_value
         self.jump_force = 0
@@ -151,8 +152,7 @@ class Player(Body):
         if self.collisions['down']:
             self.air_time = 0
             self.falling = False
-        if self.air_time >= 60:
-             self.falling = True
+        
         if self.air_time >= 280:
             self.game.dead += 1
 
@@ -221,8 +221,9 @@ class Player(Body):
                     pygame.time.set_timer(FALL_CEILING_EVENT, 2000)
             
             if not self.collisions['down'] and self.is_jumping and not self.collisions['up'] and self.game.gun:
-                self.velocity[1] -= max(3, self.velocity[1] + 0.2)
-              
+                self.velocity[1] = -3
+                self.game.player_bullets.append([[self.rect().centerx + 20, self.rect().centery - 2], 1.5, 0 ])
+                self.is_jumping = False
                     
                     
                     
@@ -300,6 +301,7 @@ class Player(Body):
 
         for enemy in enemies:
             if hitbox.colliderect(enemy.rect())  and self.is_attacking and self.dealing_damage:
+                
                 enemy.lose_hp()
                 enemy.losing_hp = True
                 self.dealing_damage = False
@@ -365,6 +367,12 @@ class Enemy(Body):
 
         if player_detection.colliderect(player):
             pass
+
+        for bullet in self.game.player_bullets:
+            if self.rect().collidepoint(bullet[0]):
+                self.lose_hp()
+                self.game.player_bullets.remove(bullet)
+
         if self.walking:
             if self.collisions['right'] or self.collisions['left']:
                 self.flip = not self.flip
