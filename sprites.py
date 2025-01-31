@@ -214,7 +214,7 @@ class Player(Body):
 
             if not self.collisions['down'] and self.is_jumping and self.collisions['up']:
                 if self.air_time < 100:
-                    print('something')
+              
                     self.gravity = False
                     
                     self.set_action('ceiling')

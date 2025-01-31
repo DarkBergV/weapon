@@ -3,6 +3,7 @@ import sys
 from sprites import Body, Player, Enemy, GunEnemy
 from tilemap import Tilemap
 from utils import load_image, load_images, Animation
+from pause import Pause
 
 
 WINDTH = 640
@@ -28,6 +29,7 @@ class Main():
         self.display_screen = pygame.surface.Surface((WINDTH // 2 , LENGTH // 2))
         self.movement = [0,0,0,0]
         self.scroll = [0,0]
+        self.pause_menu = False
         self.running = True
         self.clock = pygame.time.Clock()
         
@@ -56,6 +58,31 @@ class Main():
         
         
         self.load_level()
+
+    def pause(self):
+        self.pause_menu = True
+        self.running = False
+        pause = Pause(self)
+        while self.pause_menu:
+            
+            click = False
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    sys.exit()
+
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        click = True
+
+                self.screen.fill((0,0,0))
+                pause.update(click)
+                pause.render(self.screen, offset=(0,0))
+                pygame.display.update()
+                self.clock.tick(15)
+
+
+
 
         
     def load_level(self):
@@ -143,6 +170,8 @@ class Main():
               
 
                 if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_ESCAPE:
+                        self.pause()
                     if event.key == pygame.K_d:
                         self.movement[0] = True
                         self.movement[1] = False
