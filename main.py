@@ -38,7 +38,10 @@ class Main():
         
        
         self.tilemap = Tilemap(self, 32)
-       
+
+        #equip interface
+        self.gun = True
+        self.shield = True
         self.assets = {'ground/ground': load_images('tiles/ground'),
                        'player/ceiling': Animation(load_images('player/ceiling')),
                        'player/attack':Animation(load_images('player/attack')),
@@ -74,6 +77,7 @@ class Main():
                 if event.type == pygame.MOUSEBUTTONDOWN:
                     if event.button == 1:
                         click = True
+                
 
                 self.screen.fill((0,0,0))
                 pause.update(click)

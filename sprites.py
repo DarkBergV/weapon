@@ -183,7 +183,7 @@ class Player(Body):
             self.set_action('attack')
 
         if not self.collisions['down'] and self.is_jumping and self.is_attacking:
-            self.set_action('fall_attack')
+            pass
 
         
             
@@ -219,6 +219,13 @@ class Player(Body):
                     
                     self.set_action('ceiling')
                     pygame.time.set_timer(FALL_CEILING_EVENT, 2000)
+            
+            if not self.collisions['down'] and self.is_jumping and not self.collisions['up'] and self.game.gun:
+                self.velocity[1] -= max(3, self.velocity[1] + 0.2)
+              
+                    
+                    
+                    
 
    
     def release_jump(self):
@@ -456,6 +463,11 @@ class Enemy(Body):
         if self.hp <= 0:
             
             self.killed = True
+
+            if self.type == 'gun_enemy':
+                self.game.gun = True
+            if self.type == 'enemy':
+                self.game.shield = True
 
     def player_detection_area(self):
         return pygame.rect.Rect(self.pos[0] - 75, self.pos[1] - 75, 200, 200)
